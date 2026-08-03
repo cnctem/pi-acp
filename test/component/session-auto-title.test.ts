@@ -37,8 +37,6 @@ test('PiAcpSession: names a new session when its first prompt starts', async () 
   }
   const session = createSession(conn, proc)
 
-  session.setStartupInfo('Welcome to pi')
-  session.sendStartupInfoIfPending()
   const prompt = session.prompt('hello', [], 'Fix thread titles')
   await new Promise(resolve => setImmediate(resolve))
 

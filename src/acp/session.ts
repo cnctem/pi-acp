@@ -285,8 +285,6 @@ export class PiAcpSession {
   readonly cwd: string
   readonly mcpServers: McpServer[]
 
-  private startupInfo: string | null = null
-  private startupInfoSent = false
   private initialTitlePending: boolean
   private lastPublishedTitle: string | null | undefined
   private titleUpdateQueue: Promise<void> = Promise.resolve()
@@ -342,26 +340,6 @@ export class PiAcpSession {
     this.initialTitlePending = opts.autoTitle ?? false
 
     this.proc.onEvent(ev => this.handlePiEvent(ev))
-  }
-
-  setStartupInfo(text: string) {
-    this.startupInfo = text
-    this.startupInfoSent = false
-  }
-
-  /**
-   * Best-effort attempt to send startup info outside of a prompt turn.
-   * Some clients (e.g. Zed) may only render agent messages once the UI is ready;
-   * callers can invoke this shortly after session/new returns.
-   */
-  sendStartupInfoIfPending(): void {
-    if (this.startupInfoSent || !this.startupInfo) return
-    this.startupInfoSent = true
-
-    this.emit({
-      sessionUpdate: 'agent_message_chunk',
-      content: { type: 'text', text: this.startupInfo }
-    })
   }
 
   async prompt(message: string, images: unknown[] = [], title?: string): Promise<StopReason> {

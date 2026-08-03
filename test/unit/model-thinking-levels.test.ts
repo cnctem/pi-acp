@@ -38,8 +38,6 @@ function fixture() {
     sessionId: 's1',
     cwd: process.cwd(),
     proc,
-    setStartupInfo() {},
-    sendStartupInfoIfPending() {},
     async publishContextUsage() {}
   }
   const agent = new PiAcpAgent(asAgentConn(conn))
