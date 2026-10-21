@@ -9,7 +9,7 @@ import type {
   ToolKind
 } from '@agentclientprotocol/sdk'
 import { RequestError } from '@agentclientprotocol/sdk'
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { isAbsolute, resolve as resolvePath } from 'node:path'
 import {
   PiRpcProcess,
@@ -172,6 +172,7 @@ function toToolCallLocations(args: unknown, cwd: string, line?: number): ToolCal
 
 export class SessionManager {
   private sessions = new Map<string, PiAcpSession>()
+  private readonly sessionFiles = new Map<string, string>()
   private readonly store = new SessionStore()
 
   /** Dispose all sessions and their underlying pi subprocesses. */
@@ -197,6 +198,16 @@ export class SessionManager {
       // ignore
     }
     this.sessions.delete(sessionId)
+    this.sessionFiles.delete(sessionId)
+  }
+
+  /** Persist the session map only after pi has written its session file. */
+  remember(sessionId: string): void {
+    const session = this.sessions.get(sessionId)
+    const sessionFile = this.sessionFiles.get(sessionId)
+    if (!session || !sessionFile || !existsSync(sessionFile)) return
+
+    this.store.upsert({ sessionId, cwd: session.cwd, sessionFile })
   }
 
   /** Close all sessions except the one with `keepSessionId`. */
@@ -234,7 +245,7 @@ export class SessionManager {
     const sessionFile = typeof state?.sessionFile === 'string' ? state.sessionFile : null
 
     if (sessionFile) {
-      this.store.upsert({ sessionId, cwd: params.cwd, sessionFile })
+      this.sessionFiles.set(sessionId, sessionFile)
     }
 
     const session = new PiAcpSession({

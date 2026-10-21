@@ -857,7 +857,11 @@ export class PiAcpAgent implements ACPAgent {
       }
     }
 
-    const result = await session.prompt(message, images, promptToSessionTitle(params.prompt) ?? undefined)
+    const result = await session
+      .prompt(message, images, promptToSessionTitle(params.prompt) ?? undefined)
+      .finally(() => {
+        ;(this.sessions as any).remember?.(session.sessionId)
+      })
 
     // ACP StopReason does not include "error"; if pi fails we map to end_turn for now,
     // unless we know this was a cancellation.
